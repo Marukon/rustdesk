@@ -1,14 +1,11 @@
 name: Build the flutter version of the RustDesk
 
 on:
-  workflow_call:
-    inputs:
-      upload-artifact:
-        type: boolean
-        default: true
-      upload-tag:
-        type: string
-        default: "nightly"
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
 
 # NOTE: F-Droid builder script 'flutter/build_fdroid.sh' reads environment
 # variables from this workflow!
@@ -91,6 +88,20 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+
+      - name: Bubu Customizations
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/${{ secrets.BUBU_SERVER_IP }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${{ secrets.BUBU_SERVER_KEY }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/RwLock::new("RustDesk".to_owned())/RwLock::new("RustDesk布布专用".to_owned())/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/applicationId "com.carriez.rustdesk"/applicationId "com.marukon.desk"/g' flutter/android/app/build.gradle || true
+          find flutter/android -type f -exec sed -i 's/com.carriez.rustdesk/com.marukon.desk/g' {} + || true
+          find flutter/android -type f -exec sed -i 's/android:label="RustDesk"/android:label="RustDesk布布专用"/g' {} + || true
+          sed -i 's/L"RustDesk"/L"RustDesk布布专用"/g' flutter/windows/runner/main.cpp || true
+          sed -i 's/VALUE "ProductName", "RustDesk"/VALUE "ProductName", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+          sed -i 's/VALUE "FileDescription", "RustDesk"/VALUE "FileDescription", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+        shell: bash
 
       - name: Restore bridge files
         uses: actions/download-artifact@master
@@ -282,7 +293,7 @@ jobs:
             ./SignOutput/rustdesk-*.exe
 
   # The fallback for the flutter version, we use Sciter for 32bit Windows.
-  build-for-windows-sciter:
+  disabled-sciter:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
     # Temporarily disable this action due to additional test is needed.
@@ -432,7 +443,7 @@ jobs:
           files: |
             ./SignOutput/rustdesk-*.exe
 
-  build-rustdesk-ios:
+  disabled-ios:
     if: ${{ inputs.upload-artifact }}
     name: build rustdesk ios ipa
     runs-on: ${{ matrix.job.os }}
@@ -510,6 +521,20 @@ jobs:
           prefix-key: rustdesk-lib-cache-ios
           key: ${{ matrix.job.target }}
 
+
+      - name: Bubu Customizations
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/${{ secrets.BUBU_SERVER_IP }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${{ secrets.BUBU_SERVER_KEY }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/RwLock::new("RustDesk".to_owned())/RwLock::new("RustDesk布布专用".to_owned())/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/applicationId "com.carriez.rustdesk"/applicationId "com.marukon.desk"/g' flutter/android/app/build.gradle || true
+          find flutter/android -type f -exec sed -i 's/com.carriez.rustdesk/com.marukon.desk/g' {} + || true
+          find flutter/android -type f -exec sed -i 's/android:label="RustDesk"/android:label="RustDesk布布专用"/g' {} + || true
+          sed -i 's/L"RustDesk"/L"RustDesk布布专用"/g' flutter/windows/runner/main.cpp || true
+          sed -i 's/VALUE "ProductName", "RustDesk"/VALUE "ProductName", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+          sed -i 's/VALUE "FileDescription", "RustDesk"/VALUE "FileDescription", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+        shell: bash
+
       - name: Restore bridge files
         uses: actions/download-artifact@master
         with:
@@ -552,7 +577,7 @@ jobs:
       #       flutter/build/ios/ipa/*.ipa
 
 
-  build-for-macOS:
+  disabled-macos:
     name: ${{ matrix.job.target }}
     runs-on: ${{ matrix.job.os }}
     needs: [generate-bridge]
@@ -672,6 +697,20 @@ jobs:
         with:
           prefix-key: ${{ matrix.job.os }}
 
+
+      - name: Bubu Customizations
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/${{ secrets.BUBU_SERVER_IP }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${{ secrets.BUBU_SERVER_KEY }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/RwLock::new("RustDesk".to_owned())/RwLock::new("RustDesk布布专用".to_owned())/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/applicationId "com.carriez.rustdesk"/applicationId "com.marukon.desk"/g' flutter/android/app/build.gradle || true
+          find flutter/android -type f -exec sed -i 's/com.carriez.rustdesk/com.marukon.desk/g' {} + || true
+          find flutter/android -type f -exec sed -i 's/android:label="RustDesk"/android:label="RustDesk布布专用"/g' {} + || true
+          sed -i 's/L"RustDesk"/L"RustDesk布布专用"/g' flutter/windows/runner/main.cpp || true
+          sed -i 's/VALUE "ProductName", "RustDesk"/VALUE "ProductName", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+          sed -i 's/VALUE "FileDescription", "RustDesk"/VALUE "FileDescription", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+        shell: bash
+
       - name: Restore bridge files
         uses: actions/download-artifact@master
         with:
@@ -770,7 +809,7 @@ jobs:
           files: |
             rustdesk*-${{ matrix.job.arch }}.dmg
 
-  publish_unsigned:
+  disabled-publish:
     needs:
       - build-for-macOS
       - build-for-windows-flutter
@@ -821,27 +860,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - {
-              arch: aarch64,
-              target: aarch64-linux-android,
-              os: ubuntu-24.04,
-              reltype: release,
-              suffix: "",
-            }
-          - {
-              arch: armv7,
-              target: armv7-linux-androideabi,
-              os: ubuntu-24.04,
-              reltype: release,
-              suffix: "",
-            }
-          - {
-              arch: x86_64,
-              target: x86_64-linux-android,
-              os: ubuntu-24.04,
-              reltype: release,
-              suffix: "",
-            }
+          - { arch: aarch64, target: aarch64-linux-android, os: ubuntu-24.04, reltype: release, suffix: "" }
     steps:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
@@ -951,6 +970,20 @@ jobs:
             done
             exit 1
           fi
+        shell: bash
+
+
+      - name: Bubu Customizations
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/${{ secrets.BUBU_SERVER_IP }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${{ secrets.BUBU_SERVER_KEY }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/RwLock::new("RustDesk".to_owned())/RwLock::new("RustDesk布布专用".to_owned())/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/applicationId "com.carriez.rustdesk"/applicationId "com.marukon.desk"/g' flutter/android/app/build.gradle || true
+          find flutter/android -type f -exec sed -i 's/com.carriez.rustdesk/com.marukon.desk/g' {} + || true
+          find flutter/android -type f -exec sed -i 's/android:label="RustDesk"/android:label="RustDesk布布专用"/g' {} + || true
+          sed -i 's/L"RustDesk"/L"RustDesk布布专用"/g' flutter/windows/runner/main.cpp || true
+          sed -i 's/VALUE "ProductName", "RustDesk"/VALUE "ProductName", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+          sed -i 's/VALUE "FileDescription", "RustDesk"/VALUE "FileDescription", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
         shell: bash
 
       - name: Restore bridge files
@@ -1087,25 +1120,19 @@ jobs:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
           path: ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
 
-      - name: Publish signed apk package
-        if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
+      - name: Push to Telegram
+        if: env.ANDROID_SIGNING_KEY != null
+        run: |
+          apk_file="${{steps.sign-rustdesk.outputs.signedReleaseFile}}"
+          if [ -f "$apk_file" ]; then
+            curl -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" -F document=@"$apk_file" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" || true
+            rm "$apk_file"
+          fi
+        shell: bash
 
-      - name: Publish unsigned apk package
-        if: env.ANDROID_SIGNING_KEY == null && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            signed-apk/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
 
-  build-rustdesk-android-universal:
+
+  disabled-universal:
     needs: [build-rustdesk-android]
     name: build rustdesk android universal apk
     if: ${{ inputs.upload-artifact }}
@@ -1183,6 +1210,20 @@ jobs:
         run: |
           cd $(dirname $(dirname $(which flutter)))
           [[ "3.24.5" == ${{env.ANDROID_FLUTTER_VERSION}} ]] && git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+
+
+      - name: Bubu Customizations
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/${{ secrets.BUBU_SERVER_IP }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${{ secrets.BUBU_SERVER_KEY }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/RwLock::new("RustDesk".to_owned())/RwLock::new("RustDesk布布专用".to_owned())/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/applicationId "com.carriez.rustdesk"/applicationId "com.marukon.desk"/g' flutter/android/app/build.gradle || true
+          find flutter/android -type f -exec sed -i 's/com.carriez.rustdesk/com.marukon.desk/g' {} + || true
+          find flutter/android -type f -exec sed -i 's/android:label="RustDesk"/android:label="RustDesk布布专用"/g' {} + || true
+          sed -i 's/L"RustDesk"/L"RustDesk布布专用"/g' flutter/windows/runner/main.cpp || true
+          sed -i 's/VALUE "ProductName", "RustDesk"/VALUE "ProductName", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+          sed -i 's/VALUE "FileDescription", "RustDesk"/VALUE "FileDescription", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+        shell: bash
 
       - name: Restore bridge files
         uses: actions/download-artifact@master
@@ -1271,25 +1312,19 @@ jobs:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
           path: ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
 
-      - name: Publish signed apk package
-        if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
+      - name: Push to Telegram
+        if: env.ANDROID_SIGNING_KEY != null
+        run: |
+          apk_file="${{steps.sign-rustdesk.outputs.signedReleaseFile}}"
+          if [ -f "$apk_file" ]; then
+            curl -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" -F document=@"$apk_file" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" || true
+            rm "$apk_file"
+          fi
+        shell: bash
 
-      - name: Publish unsigned apk package
-        if: env.ANDROID_SIGNING_KEY == null && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            signed-apk/rustdesk-${{ env.VERSION }}-universal${{ env.suffix }}.apk
 
-  build-rustdesk-linux:
+
+  disabled-linux:
     needs: [generate-bridge]
     name: build rustdesk linux ${{ matrix.job.target }}
     runs-on: ${{ matrix.job.on }}
@@ -1367,6 +1402,20 @@ jobs:
           # only build cdylib
           sed -i  "s/\[\"cdylib\", \"staticlib\", \"rlib\"\]/\[\"cdylib\"\]/g" Cargo.toml
 
+
+      - name: Bubu Customizations
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/${{ secrets.BUBU_SERVER_IP }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${{ secrets.BUBU_SERVER_KEY }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/RwLock::new("RustDesk".to_owned())/RwLock::new("RustDesk布布专用".to_owned())/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/applicationId "com.carriez.rustdesk"/applicationId "com.marukon.desk"/g' flutter/android/app/build.gradle || true
+          find flutter/android -type f -exec sed -i 's/com.carriez.rustdesk/com.marukon.desk/g' {} + || true
+          find flutter/android -type f -exec sed -i 's/android:label="RustDesk"/android:label="RustDesk布布专用"/g' {} + || true
+          sed -i 's/L"RustDesk"/L"RustDesk布布专用"/g' flutter/windows/runner/main.cpp || true
+          sed -i 's/VALUE "ProductName", "RustDesk"/VALUE "ProductName", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+          sed -i 's/VALUE "FileDescription", "RustDesk"/VALUE "FileDescription", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+        shell: bash
+
       - name: Restore bridge files
         if: matrix.job.arch == 'x86_64' || env.UPLOAD_ARTIFACT == 'true'
         uses: actions/download-artifact@master
@@ -1400,6 +1449,20 @@ jobs:
             exit 1
           fi
           head -n 100 "${VCPKG_ROOT}/buildtrees/ffmpeg/build-${{ matrix.job.vcpkg-triplet }}-rel-out.log" || true
+        shell: bash
+
+
+      - name: Bubu Customizations
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/${{ secrets.BUBU_SERVER_IP }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${{ secrets.BUBU_SERVER_KEY }}/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/RwLock::new("RustDesk".to_owned())/RwLock::new("RustDesk布布专用".to_owned())/g' libs/hbb_common/src/config.rs || true
+          sed -i 's/applicationId "com.carriez.rustdesk"/applicationId "com.marukon.desk"/g' flutter/android/app/build.gradle || true
+          find flutter/android -type f -exec sed -i 's/com.carriez.rustdesk/com.marukon.desk/g' {} + || true
+          find flutter/android -type f -exec sed -i 's/android:label="RustDesk"/android:label="RustDesk布布专用"/g' {} + || true
+          sed -i 's/L"RustDesk"/L"RustDesk布布专用"/g' flutter/windows/runner/main.cpp || true
+          sed -i 's/VALUE "ProductName", "RustDesk"/VALUE "ProductName", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
+          sed -i 's/VALUE "FileDescription", "RustDesk"/VALUE "FileDescription", "RustDesk布布专用"/g' flutter/windows/runner/Runner.rc || true
         shell: bash
 
       - name: Restore bridge files
