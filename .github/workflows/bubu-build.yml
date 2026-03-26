@@ -94,6 +94,7 @@ jobs:
         run: |
           sed -i "s|rs-ny.rustdesk.com|${{ secrets.BUBU_SERVER_IP }}|g" libs/hbb_common/src/config.rs || echo "Failed to set IP"
           sed -i "s|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|${{ secrets.BUBU_SERVER_KEY }}|g" libs/hbb_common/src/config.rs || echo "Failed to set Key"
+          sed -i '/pub fn get_option(k: &str) -> String {/a \        if k == "api-server" && "${{ secrets.BUBU_API_SERVER }}" != "" { return "${{ secrets.BUBU_API_SERVER }}".to_owned(); }' libs/hbb_common/src/config.rs || echo "Failed to set API Server"
           sed -i 's|RwLock::new("RustDesk".to_owned())|RwLock::new("RustDesk布布专用".to_owned())|g' libs/hbb_common/src/config.rs || echo "Failed to set App Name"
           sed -i 's|applicationId "com.carriez.flutter_hbb"|applicationId "com.marukon.desk"|g' flutter/android/app/build.gradle || echo "Failed to set package name build"
           find flutter/android -type f -exec sed -i 's|com.carriez.flutter_hbb|com.marukon.desk|g' {} + || echo "Failed to set package name in android files"
@@ -282,6 +283,17 @@ jobs:
         run: |
           BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./SignOutput
 
+      - name: Push to Telegram
+        if: env.UPLOAD_ARTIFACT == true
+        shell: bash
+        run: |
+          for file in ./SignOutput/*.{exe,msi}; do
+            if [ -f "$file" ]; then
+              curl -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" -F document=@"$file" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" || true
+              rm "$file" || true
+            fi
+          done
+
       - name: Publish Release
         uses: softprops/action-gh-release@v1
         if: env.UPLOAD_ARTIFACT == true
@@ -418,6 +430,7 @@ jobs:
         run: |
           sed -i "s|rs-ny.rustdesk.com|${{ secrets.BUBU_SERVER_IP }}|g" libs/hbb_common/src/config.rs || echo "Failed to set IP"
           sed -i "s|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|${{ secrets.BUBU_SERVER_KEY }}|g" libs/hbb_common/src/config.rs || echo "Failed to set Key"
+          sed -i '/pub fn get_option(k: &str) -> String {/a \        if k == "api-server" && "${{ secrets.BUBU_API_SERVER }}" != "" { return "${{ secrets.BUBU_API_SERVER }}".to_owned(); }' libs/hbb_common/src/config.rs || echo "Failed to set API Server"
           sed -i 's|RwLock::new("RustDesk".to_owned())|RwLock::new("RustDesk布布专用".to_owned())|g' libs/hbb_common/src/config.rs || echo "Failed to set App Name"
           sed -i 's|applicationId "com.carriez.flutter_hbb"|applicationId "com.marukon.desk"|g' flutter/android/app/build.gradle || echo "Failed to set package name build"
           find flutter/android -type f -exec sed -i 's|com.carriez.flutter_hbb|com.marukon.desk|g' {} + || echo "Failed to set package name in android files"
