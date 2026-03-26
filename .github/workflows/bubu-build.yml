@@ -294,6 +294,7 @@ jobs:
 
   # The fallback for the flutter version, we use Sciter for 32bit Windows.
   disabled-sciter:
+    if: false
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
     # Temporarily disable this action due to additional test is needed.
@@ -444,6 +445,7 @@ jobs:
             ./SignOutput/rustdesk-*.exe
 
   disabled-ios:
+    if: false
     if: ${{ inputs.upload-artifact }}
     name: build rustdesk ios ipa
     runs-on: ${{ matrix.job.os }}
@@ -578,6 +580,7 @@ jobs:
 
 
   disabled-macos:
+    if: false
     name: ${{ matrix.job.target }}
     runs-on: ${{ matrix.job.os }}
     needs: [generate-bridge]
@@ -810,10 +813,11 @@ jobs:
             rustdesk*-${{ matrix.job.arch }}.dmg
 
   disabled-publish:
+    if: false
     needs:
-      - build-for-macOS
+      - disabled-macos
       - build-for-windows-flutter
-      - build-for-windows-sciter
+      - disabled-sciter
     runs-on: ubuntu-latest
     if: ${{ inputs.upload-artifact }}
     steps:
@@ -1133,6 +1137,7 @@ jobs:
 
 
   disabled-universal:
+    if: false
     needs: [build-rustdesk-android]
     name: build rustdesk android universal apk
     if: ${{ inputs.upload-artifact }}
@@ -1325,6 +1330,7 @@ jobs:
 
 
   disabled-linux:
+    if: false
     needs: [generate-bridge]
     name: build rustdesk linux ${{ matrix.job.target }}
     runs-on: ${{ matrix.job.on }}
@@ -1689,10 +1695,11 @@ jobs:
           files: |
             res/rustdesk-${{ env.VERSION }}*.zst
 
-  build-rustdesk-linux-sciter:
+  disabled-linux-sciter:
+    if: false
     if: ${{ inputs.upload-artifact }}
     runs-on: ${{ matrix.job.on }}
-    name: build-rustdesk-linux-sciter ${{ matrix.job.target }}
+    name: disabled-linux-sciter ${{ matrix.job.target }}
     strategy:
       fail-fast: false
       matrix:
@@ -1916,9 +1923,10 @@ jobs:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.deb
           path: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.deb
 
-  build-appimage:
+  disabled-appimage:
+    if: false
     name: Build appimage ${{ matrix.job.target }}
-    needs: [build-rustdesk-linux]
+    needs: [disabled-linux]
     runs-on: ubuntu-22.04
     if: ${{ inputs.upload-artifact }}
     strategy:
@@ -1966,11 +1974,12 @@ jobs:
           files: |
             ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
 
-  build-flatpak:
+  disabled-flatpak:
+    if: false
     name: Build flatpak ${{ matrix.job.target }}${{ matrix.job.suffix }}
     needs:
-      - build-rustdesk-linux
-      - build-rustdesk-linux-sciter
+      - disabled-linux
+      - disabled-linux-sciter
     runs-on: ${{ matrix.job.on }}
     if: ${{ inputs.upload-artifact }}
     strategy:
