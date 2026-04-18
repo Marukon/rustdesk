@@ -540,30 +540,51 @@ jobs:
           echo "ANDROID_SIGN_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
           echo Last build tool version is: $BUILD_TOOL_VERSION
 
-      - uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        if: env.ANDROID_SIGNING_KEY != null
-        id: sign-rustdesk
-        with:
-          releaseDirectory: ./signed-apk
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        env:
-          # env.ANDROID_SIGN_TOOL_VERSION is set by Step "Setup sign tool version variable"
-          BUILD_TOOLS_VERSION: ${{ env.ANDROID_SIGN_TOOL_VERSION }}
-
-
-
-      - name: Push to Telegram
+      - name: Compute APK MD5 and compare
+        id: md5check
         if: env.ANDROID_SIGNING_KEY != null
         run: |
-          apk_file="${{steps.sign-rustdesk.outputs.signedReleaseFile}}"
-          if [ -f "$apk_file" ]; then
-            curl -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" -F document=@"$apk_file" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" || true
-            rm "$apk_file"
+          apk_file="${{ steps.sign-rustdesk.outputs.signedReleaseFile }}"
+          md5_file=".last_apk_md5"
+
+          if [ ! -f "$apk_file" ]; then
+            echo "ERROR: APK not found!"
+            exit 1
           fi
+
+          # 计算当前 APK 的 MD5
+          current_md5=$(md5sum "$apk_file" | awk '{print $1}')
+          echo "Current MD5: $current_md5"
+
+          # 如果没有历史记录，视为第一次
+          if [ ! -f "$md5_file" ]; then
+            echo "No previous MD5 found, treat as first build."
+            echo "should_send=true" >> $GITHUB_OUTPUT
+            echo "$current_md5" > "$md5_file"
+            exit 0
+          fi
+
+          # 读取上一次的 MD5
+          last_md5=$(cat "$md5_file")
+          echo "Last MD5: $last_md5"
+
+          if [ "$current_md5" = "$last_md5" ]; then
+            echo "MD5 unchanged. Skip Telegram upload."
+            echo "should_send=false" >> $GITHUB_OUTPUT
+          else
+            echo "MD5 changed. Will upload."
+            echo "should_send=true" >> $GITHUB_OUTPUT
+            echo "$current_md5" > "$md5_file"
+          fi
+
+      - name: Push to Telegram
+        if: env.ANDROID_SIGNING_KEY != null && steps.md5check.outputs.should_send == 'true'
+        run: |
+          apk_file="${{ steps.sign-rustdesk.outputs.signedReleaseFile }}"
+          curl -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+               -F document=@"$apk_file" \
+               "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" || true
+          rm "$apk_file"
         shell: bash
 
 
