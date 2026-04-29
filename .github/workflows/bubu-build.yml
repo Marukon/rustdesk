@@ -569,6 +569,7 @@ jobs:
         run: |
           apk_file="${{ steps.sign-rustdesk.outputs.signedReleaseFile }}"
           md5_file=".last_apk_md5"
+          default_md5="6AB5EAFAC5ACC0F783564D08B235CDB5"
 
           if [ ! -f "$apk_file" ]; then
             echo "ERROR: APK not found!"
@@ -578,14 +579,14 @@ jobs:
           current_md5=$(md5sum "$apk_file" | awk '{print $1}')
           echo "Current MD5: $current_md5"
 
+          # 如果没有缓存文件，则使用默认 MD5
           if [ ! -f "$md5_file" ]; then
-            echo "No previous MD5 found"
-            echo "should_send=true" >> $GITHUB_OUTPUT
-            echo "$current_md5" > "$md5_file"
-            exit 0
+            echo "No cache found, using default MD5"
+            last_md5="$default_md5"
+          else
+            last_md5=$(cat "$md5_file")
           fi
 
-          last_md5=$(cat "$md5_file")
           echo "Last MD5: $last_md5"
 
           if [ "$current_md5" = "$last_md5" ]; then
@@ -613,5 +614,3 @@ jobs:
         with:
           path: .last_apk_md5
           key: apk-md5-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('.last_apk_md5') }}
-
-
