@@ -554,6 +554,15 @@ jobs:
           # env.ANDROID_SIGN_TOOL_VERSION is set by Step "Setup sign tool version variable"
           BUILD_TOOLS_VERSION: ${{ env.ANDROID_SIGN_TOOL_VERSION }}
 
+      - name: Restore MD5 cache
+        id: md5-cache
+        uses: actions/cache@v4
+        with:
+          path: .last_apk_md5
+          key: apk-md5-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            apk-md5-${{ runner.os }}-${{ github.ref_name }}-
+
       - name: Compute APK MD5 and compare
         id: md5check
         if: env.ANDROID_SIGNING_KEY != null
@@ -566,27 +575,24 @@ jobs:
             exit 1
           fi
 
-          # 计算当前 APK 的 MD5
           current_md5=$(md5sum "$apk_file" | awk '{print $1}')
           echo "Current MD5: $current_md5"
 
-          # 如果没有历史记录，视为第一次
           if [ ! -f "$md5_file" ]; then
-            echo "No previous MD5 found, treat as first build."
+            echo "No previous MD5 found"
             echo "should_send=true" >> $GITHUB_OUTPUT
             echo "$current_md5" > "$md5_file"
             exit 0
           fi
 
-          # 读取上一次的 MD5
           last_md5=$(cat "$md5_file")
           echo "Last MD5: $last_md5"
 
           if [ "$current_md5" = "$last_md5" ]; then
-            echo "MD5 unchanged. Skip Telegram upload."
+            echo "MD5 unchanged"
             echo "should_send=false" >> $GITHUB_OUTPUT
           else
-            echo "MD5 changed. Will upload."
+            echo "MD5 changed"
             echo "should_send=true" >> $GITHUB_OUTPUT
             echo "$current_md5" > "$md5_file"
           fi
@@ -601,5 +607,11 @@ jobs:
           rm "$apk_file"
         shell: bash
 
+      - name: Save MD5 cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .last_apk_md5
+          key: apk-md5-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('.last_apk_md5') }}
 
 
