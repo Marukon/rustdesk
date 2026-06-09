@@ -1,10 +1,14 @@
-name: Build the flutter version of the RustDesk
+name: Build my own RustDesk
 
 on:
   push:
     branches:
       - master
       - main
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "README.md"
   workflow_dispatch:
 
 # NOTE: F-Droid builder script 'flutter/build_fdroid.sh' reads environment
