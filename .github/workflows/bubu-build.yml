@@ -589,49 +589,6 @@ jobs:
           # env.ANDROID_SIGN_TOOL_VERSION is set by Step "Setup sign tool version variable"
           BUILD_TOOLS_VERSION: ${{ env.ANDROID_SIGN_TOOL_VERSION }}
 
-      - name: Restore MD5 cache
-        id: md5-cache
-        uses: actions/cache@v4
-        with:
-          path: .last_apk_md5
-          key: apk-md5-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
-          restore-keys: |
-            apk-md5-${{ runner.os }}-${{ github.ref_name }}-
-
-      - name: Compute APK MD5 and compare
-        id: md5check
-        if: env.ANDROID_SIGNING_KEY != null
-        run: |
-          apk_file="${{ steps.sign-rustdesk.outputs.signedReleaseFile }}"
-          md5_file=".last_apk_md5"
-          default_md5="6AB5EAFAC5ACC0F783564D08B235CDB5"
-
-          if [ ! -f "$apk_file" ]; then
-            echo "ERROR: APK not found!"
-            exit 1
-          fi
-
-          current_md5=$(md5sum "$apk_file" | awk '{print $1}')
-          echo "Current MD5: $current_md5"
-
-          # 如果没有缓存文件，则使用默认 MD5
-          if [ ! -f "$md5_file" ]; then
-            echo "No cache found, using default MD5"
-            last_md5="$default_md5"
-          else
-            last_md5=$(cat "$md5_file")
-          fi
-
-          echo "Last MD5: $last_md5"
-
-          if [ "$current_md5" = "$last_md5" ]; then
-            echo "MD5 unchanged"
-            echo "should_send=false" >> $GITHUB_OUTPUT
-          else
-            echo "MD5 changed"
-            echo "should_send=true" >> $GITHUB_OUTPUT
-            echo "$current_md5" > "$md5_file"
-          fi
 
       - name: Push to Telegram
         if: env.ANDROID_SIGNING_KEY != null && steps.md5check.outputs.should_send == 'true'
@@ -643,9 +600,3 @@ jobs:
           rm "$apk_file"
         shell: bash
 
-      - name: Save MD5 cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: .last_apk_md5
-          key: apk-md5-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('.last_apk_md5') }}
