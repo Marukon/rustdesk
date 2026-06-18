@@ -109,13 +109,13 @@ jobs:
           sed -i "s|rs-ny.rustdesk.com|${{ secrets.BUBU_SERVER_IP }}|g" libs/hbb_common/src/config.rs || echo "Failed to set IP"
           sed -i "s|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|${{ secrets.BUBU_SERVER_KEY }}|g" libs/hbb_common/src/config.rs || echo "Failed to set Key"
           sed -i '/pub fn get_option(k: &str) -> String {/a \        if k == "api-server" && "${{ secrets.BUBU_API_SERVER }}" != "" { return "${{ secrets.BUBU_API_SERVER }}".to_owned(); }' libs/hbb_common/src/config.rs || echo "Failed to set API Server"
-          sed -i 's|RwLock::new("RustDesk".to_owned())|RwLock::new("RustDesk布布专用".to_owned())|g' libs/hbb_common/src/config.rs || echo "Failed to set App Name"
+          sed -i 's|RwLock::new("RustDesk".to_owned())|RwLock::new("布布远控".to_owned())|g' libs/hbb_common/src/config.rs || echo "Failed to set App Name"
           sed -i 's|applicationId "com.carriez.flutter_hbb"|applicationId "com.marukon.desk"|g' flutter/android/app/build.gradle || echo "Failed to set package name build"
           find flutter/android -type f -exec sed -i 's|com.carriez.flutter_hbb|com.marukon.desk|g' {} + || echo "Failed to set package name in android files"
-          find flutter/android -type f -name "*AndroidManifest.xml" -exec sed -i 's|android:label="RustDesk"|android:label="RustDesk布布专用"|g' {} + || echo "Failed to set Android label"
-          sed -i 's|L"RustDesk"|L"RustDesk布布专用"|g' flutter/windows/runner/main.cpp || true
-          sed -i 's|VALUE "ProductName", "RustDesk"|VALUE "ProductName", "RustDesk布布专用"|g' flutter/windows/runner/Runner.rc || true
-          sed -i 's|VALUE "FileDescription", "RustDesk"|VALUE "FileDescription", "RustDesk布布专用"|g' flutter/windows/runner/Runner.rc || true
+          find flutter/android -type f -name "*AndroidManifest.xml" -exec sed -i 's|android:label="RustDesk"|android:label="布布远控"|g' {} + || echo "Failed to set Android label"
+          sed -i 's|L"RustDesk"|L"布布远控"|g' flutter/windows/runner/main.cpp || true
+          sed -i 's|VALUE "ProductName", "RustDesk"|VALUE "ProductName", "布布远控"|g' flutter/windows/runner/Runner.rc || true
+          sed -i 's|VALUE "FileDescription", "RustDesk"|VALUE "FileDescription", "布布远控"|g' flutter/windows/runner/Runner.rc || true
         shell: bash
 
       - name: Restore bridge files
@@ -442,13 +442,13 @@ jobs:
           sed -i "s|rs-ny.rustdesk.com|${{ secrets.BUBU_SERVER_IP }}|g" libs/hbb_common/src/config.rs || echo "Failed to set IP"
           sed -i "s|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|${{ secrets.BUBU_SERVER_KEY }}|g" libs/hbb_common/src/config.rs || echo "Failed to set Key"
           sed -i '/pub fn get_option(k: &str) -> String {/a \        if k == "api-server" && "${{ secrets.BUBU_API_SERVER }}" != "" { return "${{ secrets.BUBU_API_SERVER }}".to_owned(); }' libs/hbb_common/src/config.rs || echo "Failed to set API Server"
-          sed -i 's|RwLock::new("RustDesk".to_owned())|RwLock::new("RustDesk布布专用".to_owned())|g' libs/hbb_common/src/config.rs || echo "Failed to set App Name"
+          sed -i 's|RwLock::new("RustDesk".to_owned())|RwLock::new("布布远控".to_owned())|g' libs/hbb_common/src/config.rs || echo "Failed to set App Name"
           sed -i 's|applicationId "com.carriez.flutter_hbb"|applicationId "com.marukon.desk"|g' flutter/android/app/build.gradle || echo "Failed to set package name build"
           find flutter/android -type f -exec sed -i 's|com.carriez.flutter_hbb|com.marukon.desk|g' {} + || echo "Failed to set package name in android files"
-          find flutter/android -type f -name "*AndroidManifest.xml" -exec sed -i 's|android:label="RustDesk"|android:label="RustDesk布布专用"|g' {} + || echo "Failed to set Android label"
-          sed -i 's|L"RustDesk"|L"RustDesk布布专用"|g' flutter/windows/runner/main.cpp || true
-          sed -i 's|VALUE "ProductName", "RustDesk"|VALUE "ProductName", "RustDesk布布专用"|g' flutter/windows/runner/Runner.rc || true
-          sed -i 's|VALUE "FileDescription", "RustDesk"|VALUE "FileDescription", "RustDesk布布专用"|g' flutter/windows/runner/Runner.rc || true
+          find flutter/android -type f -name "*AndroidManifest.xml" -exec sed -i 's|android:label="RustDesk"|android:label="布布远控"|g' {} + || echo "Failed to set Android label"
+          sed -i 's|L"RustDesk"|L"布布远控"|g' flutter/windows/runner/main.cpp || true
+          sed -i 's|VALUE "ProductName", "RustDesk"|VALUE "ProductName", "布布远控"|g' flutter/windows/runner/Runner.rc || true
+          sed -i 's|VALUE "FileDescription", "RustDesk"|VALUE "FileDescription", "布布远控"|g' flutter/windows/runner/Runner.rc || true
         shell: bash
 
       - name: Restore bridge files
