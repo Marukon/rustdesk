@@ -68,15 +68,9 @@ jobs:
         job:
           - { arch: aarch64, target: aarch64-linux-android, os: ubuntu-24.04, reltype: release, suffix: "" }
     steps:
-      - name: Read Version from flutter-build.yml
-        shell: bash
-        run: |
-          FILE_PATH=".github/workflows/flutter-build.yml"
-          if [ ! -f "$FILE_PATH" ]; then
-            FILE_PATH=".github/workflows/bubu-build.yml"
-          fi
-          VERSION=$(grep -E '^\s*VERSION:\s*' "$FILE_PATH" | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+
+
 
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
