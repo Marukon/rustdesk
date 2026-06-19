@@ -347,7 +347,6 @@ jobs:
 
 
       - name: Push to Telegram
-        if: env.ANDROID_SIGNING_KEY != null && steps.md5check.outputs.should_send == 'true'
         run: |
           apk_file="${{ steps.sign-rustdesk.outputs.signedReleaseFile }}"
           curl -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
