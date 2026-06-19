@@ -1,0 +1,70 @@
+name: Cleanup Old Workflow Runs
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每天国际标准时间 00:00 (北京时间 08:00) 自动执行
+  workflow_dispatch: # 允许在 GitHub 页面上手动点击按钮触发
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # 必须赋予写入权限才能执行删除操作
+
+    steps:
+      - name: Delete workflow runs older than 1 day
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const oneDayAgo = new Date();
+            oneDayAgo.setDate(oneDayAgo.getDate() - 1); // 计算24小时前的时间戳
+            console.log(`正在清理 ${oneDayAgo.toISOString()} 之前的所有历史工作流运行记录...`);
+
+            // 1. 分页获取所有工作流运行历史
+            let page = 1;
+            let hasNextPage = true;
+
+            while (hasNextPage) {
+              const response = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+                page: page
+              });
+
+              const runs = response.data.workflow_runs;
+              if (runs.length === 0) {
+                hasNextPage = false;
+                break;
+              }
+
+              for (const run of runs) {
+                const runCreatedAt = new Date(run.created_at);
+                
+                // 2. 筛选条件：状态为已结束，且创建时间早于1天前
+                if (run.status === 'completed' && runCreatedAt < oneDayAgo) {
+                  // 核心安全保护：避免删掉当前正在运行的这个工作流本身
+                  if (run.id === context.runId) continue; 
+                  
+                  try {
+                    console.log(`[删除] Workflow: "${run.name}" | ID: ${run.id} | 创建时间: ${run.created_at}`);
+                    await github.rest.actions.deleteWorkflowRun({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      run_id: run.id
+                    });
+                  } catch (error) {
+                    console.error(`[失败] 无法删除运行记录 ${run.id}: ${error.message}`);
+                  }
+                }
+              }
+
+              // 判定是否需要继续读取下一页
+              if (runs.length < 100) {
+                hasNextPage = false;
+              } else {
+                page++;
+              }
+            }
+            console.log('清理任务完成。');
+
