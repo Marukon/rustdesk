@@ -345,10 +345,19 @@ jobs:
           # env.ANDROID_SIGN_TOOL_VERSION is set by Step "Setup sign tool version variable"
           BUILD_TOOLS_VERSION: ${{ env.ANDROID_SIGN_TOOL_VERSION }}
 
+      - name: Rename APK with commit hash
+        shell: bash
+        run: |
+          apk_file="${{ steps.sign-rustdesk.outputs.signedReleaseFile }}"
+          commit="${{ github.sha }}"
+          new_name="$(basename "$apk_file" .apk)-${commit:0:7}.apk"
+          mv "$apk_file" "$(dirname "$apk_file")/$new_name"
+          echo "RENAMED_APK=$(dirname "$apk_file")/$new_name" >> $GITHUB_ENV
+
 
       - name: Push to Telegram
         run: |
-          apk_file="${{ steps.sign-rustdesk.outputs.signedReleaseFile }}"
+          apk_file="${{ env.RENAMED_APK }}"
           curl -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
                -F document=@"$apk_file" \
                "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" || true
