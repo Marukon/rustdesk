@@ -130,15 +130,20 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Read Version from flutter-build.yml
+      - name: Read Versions from flutter-build.yml
         shell: bash
         run: |
           FILE_PATH=".github/workflows/flutter-build.yml"
           if [ ! -f "$FILE_PATH" ]; then
             FILE_PATH=".github/workflows/bubu-build.yml"
           fi
-          VERSION=$(grep -E '^\s*VERSION:\s*' "$FILE_PATH" | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          for VAR in VERSION NDK_VERSION VCPKG_COMMIT_ID ARMV7_VCPKG_COMMIT_ID ANDROID_FLUTTER_VERSION FLUTTER_VERSION RUST_VERSION CARGO_NDK_VERSION LLVM_VERSION SCITER_RUST_VERSION VCPKG_CMAKE_VERSION; do
+            VAL=$(grep -E "^\s*${VAR}:\s*" "$FILE_PATH" | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
+            if [ -n "$VAL" ]; then
+              echo "${VAR}=${VAL}" >> $GITHUB_ENV
+              echo "Loaded ${VAR}=${VAL}"
+            fi
+          done
 
       - name: Install flutter
         uses: subosito/flutter-action@v2
@@ -149,7 +154,9 @@ jobs:
       - name: Patch flutter
         run: |
           cd $(dirname $(dirname $(which flutter)))
-          [[ "3.24.5" == ${{env.ANDROID_FLUTTER_VERSION}} ]] && git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+          if [[ "3.24.5" == "${{ env.ANDROID_FLUTTER_VERSION }}" ]]; then
+            git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff || true
+          fi
 
       - uses: nttld/setup-ndk@v1
         id: setup-ndk
@@ -180,7 +187,26 @@ jobs:
               ANDROID_TARGET=x86
             ;;
           esac
-          if ! ./flutter/build_android_deps.sh "${ANDROID_TARGET}"; then
+
+          # Configure git network resilience to handle temporary 503 / RPC failures
+          git config --global http.postBuffer 524288000
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 60
+
+          SUCCESS=0
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt of 3: Building vcpkg dependencies for ${ANDROID_TARGET}..."
+            if ./flutter/build_android_deps.sh "${ANDROID_TARGET}"; then
+              SUCCESS=1
+              break
+            else
+              echo "Attempt $attempt failed. Cleaning temporary git downloads and retrying in 10s..."
+              rm -rf "${VCPKG_ROOT}/downloads/git-tmp" 2>/dev/null || true
+              sleep 10
+            fi
+          done
+
+          if [ $SUCCESS -ne 1 ]; then
             find "${VCPKG_ROOT}/" -name "*.log" | while read -r _1; do
               echo "$_1:"
               echo "======"
