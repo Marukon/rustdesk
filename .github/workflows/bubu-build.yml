@@ -229,23 +229,9 @@ jobs:
           
           # 2. 修改 Android 包名与应用名称
           # 仅修改 applicationId 即可改变安装包名（在手机系统/设置中显示为 com.marukon.desk）
-          # 禁止全局替换 Kotlin 代码内部的 package com.carriez.flutter_hbb，否则会导致底层 JNI (DocumentLogs 等) 找不到符号闪退
+          # 保留 Kotlin 代码内部 package com.carriez.flutter_hbb，确保与底层 JNI (DocumentLogs 等) 签名一致
           sed -i 's|applicationId "com.carriez.flutter_hbb"|applicationId "com.marukon.desk"|g' flutter/android/app/build.gradle || echo "Failed to set package name build"
           find flutter/android -type f -name "*AndroidManifest.xml" -exec sed -i 's|android:label="RustDesk"|android:label="布布远控"|g' {} + || echo "Failed to set Android label"
-          
-          # 双重保险：同时为 Rust 层的 JNI 导出函数追加 com_marukon_desk 别名，确保无论何种情况均不会发生 UnsatisfiedLinkError
-          if [ -f "src/platform/android_log.rs" ]; then
-            sed -i '/pub extern "system" fn Java_com_carriez_flutter_1hbb_DocumentLogs_setEnabled/i \
-#[no_mangle]\
-pub extern "system" fn Java_com_marukon_desk_DocumentLogs_setEnabled(\
-    env: jni::JNIEnv,\
-    instance: jni::objects::JObject,\
-    enabled: jni::sys::jboolean,\
-) {\
-    Java_com_carriez_flutter_1hbb_DocumentLogs_setEnabled(env, instance, enabled);\
-}\
-' src/platform/android_log.rs || echo "Failed to patch android_log.rs"
-          fi
           
           # 3. 修改 Windows 窗口标题及编译资源描述
           sed -i 's|L"RustDesk"|L"布布远控"|g' flutter/windows/runner/main.cpp || true
